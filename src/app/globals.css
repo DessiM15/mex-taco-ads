@@ -17,3 +17,13 @@ body {
 ::-webkit-scrollbar {
   display: none;
 }
+
+/* Crossfade between ads */
+@keyframes ad-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

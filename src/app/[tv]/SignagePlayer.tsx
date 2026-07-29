@@ -7,11 +7,25 @@ interface AdItem {
   type: "image" | "video";
 }
 
-const IMAGE_DURATION = 9000;
-const VIDEO_TIMEOUT = 30000;
+// An image is held at full opacity for HOLD_DURATION, then the next ad
+// crossfades in on top of it. So each ad is fully visible for exactly 10s
+// and the slot pitch is 10.5s.
+const HOLD_DURATION = 10000;
 const CROSSFADE_DURATION = 500;
+const SLOT_DURATION = HOLD_DURATION + CROSSFADE_DURATION;
+const VIDEO_TIMEOUT = 30000;
 const RELOAD_HOUR = 4;
 const CST_OFFSET = -6;
+
+interface Slot {
+  index: number;
+  // Index of the ad being faded out from, or null once the fade is over.
+  prev: number | null;
+  // Absolute timestamp at which the *next* ad starts fading in. Deadlines are
+  // absolute rather than "now + 10500" so a timer that fires late on slow TV
+  // hardware doesn't push the following one out — the error can't accumulate.
+  fadeAt: number;
+}
 
 function getCSThour(): number {
   const now = new Date();
@@ -55,12 +69,8 @@ async function requestWakeLock() {
 
 export default function SignagePlayer({ tv }: { tv: string }) {
   const [ads, setAds] = useState<AdItem[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [opacity, setOpacity] = useState(1);
+  const [slot, setSlot] = useState<Slot>({ index: 0, prev: null, fadeAt: 0 });
   const videoRef = useRef<HTMLVideoElement>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const videoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const advancingRef = useRef(false);
 
   // Load ad manifest
   useEffect(() => {
@@ -81,6 +91,7 @@ export default function SignagePlayer({ tv }: { tv: string }) {
           })
           .filter((item): item is AdItem => item !== null);
         setAds(items);
+        setSlot({ index: 0, prev: null, fadeAt: Date.now() + SLOT_DURATION });
       })
       .catch(() => {
         setTimeout(() => window.location.reload(), 10000);
@@ -94,47 +105,54 @@ export default function SignagePlayer({ tv }: { tv: string }) {
   }, []);
 
   const advance = useCallback(() => {
-    if (advancingRef.current) return;
-    advancingRef.current = true;
-
-    // Fade out
-    setOpacity(0);
-    setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % ads.length);
-      // Small delay then fade in
-      setTimeout(() => {
-        setOpacity(1);
-        advancingRef.current = false;
-      }, 50);
-    }, CROSSFADE_DURATION);
+    const now = Date.now();
+    setSlot((s) => {
+      const nextIndex = (s.index + 1) % ads.length;
+      let fadeAt = s.fadeAt + SLOT_DURATION;
+      // Resync if we're outside a sane window — the ad ended early (video), the
+      // Fire Stick was suspended, or the clock jumped.
+      if (fadeAt < now || fadeAt > now + SLOT_DURATION) {
+        fadeAt = now + SLOT_DURATION;
+      }
+      return {
+        index: nextIndex,
+        prev: nextIndex === s.index ? null : s.index,
+        fadeAt,
+      };
+    });
   }, [ads.length]);
 
-  // Handle timing for current ad
+  // Hold the current ad, then hand off to the next one. Recomputing the delay
+  // from the absolute deadline keeps this effect idempotent and drift-free.
   useEffect(() => {
     if (ads.length === 0) return;
-    const currentAd = ads[currentIndex];
+    const currentAd = ads[slot.index];
+    const delay =
+      currentAd.type === "video" ? VIDEO_TIMEOUT : Math.max(0, slot.fadeAt - Date.now());
+    const timer = setTimeout(advance, delay);
+    return () => clearTimeout(timer);
+  }, [slot, ads, advance]);
 
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    if (videoTimeoutRef.current) clearTimeout(videoTimeoutRef.current);
+  // Drop the outgoing layer once it's fully covered.
+  useEffect(() => {
+    if (slot.prev === null) return;
+    const timer = setTimeout(() => {
+      setSlot((s) => (s.prev === null ? s : { ...s, prev: null }));
+    }, CROSSFADE_DURATION + 100);
+    return () => clearTimeout(timer);
+  }, [slot.index, slot.prev]);
 
-    if (currentAd.type === "image") {
-      timeoutRef.current = setTimeout(advance, IMAGE_DURATION);
-    } else if (currentAd.type === "video") {
-      videoTimeoutRef.current = setTimeout(advance, VIDEO_TIMEOUT);
-    }
-
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (videoTimeoutRef.current) clearTimeout(videoTimeoutRef.current);
-    };
-  }, [currentIndex, ads, advance]);
+  // Fetch the next image while the current one is on screen, so the crossfade
+  // never waits on the network.
+  useEffect(() => {
+    if (ads.length < 2) return;
+    const nextAd = ads[(slot.index + 1) % ads.length];
+    if (nextAd.type !== "image") return;
+    const preload = new window.Image();
+    preload.src = nextAd.src;
+  }, [slot.index, ads]);
 
   const handleVideoEnd = () => {
-    if (videoTimeoutRef.current) clearTimeout(videoTimeoutRef.current);
-    advance();
-  };
-
-  const handleImageError = () => {
     advance();
   };
 
@@ -142,7 +160,17 @@ export default function SignagePlayer({ tv }: { tv: string }) {
     return <div style={{ width: "100vw", height: "100vh", background: "#000" }} />;
   }
 
-  const currentAd = ads[currentIndex];
+  const currentAd = ads[slot.index];
+  const prevAd = slot.prev !== null ? ads[slot.prev] : null;
+
+  const layerStyle: React.CSSProperties = {
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    position: "absolute",
+    top: 0,
+    left: 0,
+  };
 
   return (
     <div
@@ -157,42 +185,43 @@ export default function SignagePlayer({ tv }: { tv: string }) {
         position: "relative",
       }}
     >
+      {/* Outgoing ad stays at full opacity underneath — the incoming one fades
+          in over it, so the crossfade never dips through black. */}
+      {prevAd && prevAd.type === "image" && (
+        <img
+          key={`prev-${slot.prev}-${prevAd.src}`}
+          src={prevAd.src}
+          alt=""
+          style={{ ...layerStyle, zIndex: 1 }}
+        />
+      )}
+
       {currentAd.type === "image" ? (
         <img
-          key={`${currentIndex}-${currentAd.src}`}
+          key={`${slot.index}-${currentAd.src}`}
           src={currentAd.src}
           alt=""
-          onError={handleImageError}
+          onError={advance}
           style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            opacity,
-            transition: `opacity ${CROSSFADE_DURATION}ms ease-in-out`,
-            position: "absolute",
-            top: 0,
-            left: 0,
+            ...layerStyle,
+            zIndex: 2,
+            animation: `ad-fade-in ${CROSSFADE_DURATION}ms ease-in-out both`,
           }}
         />
       ) : (
         <video
-          key={`${currentIndex}-${currentAd.src}`}
+          key={`${slot.index}-${currentAd.src}`}
           ref={videoRef}
           src={currentAd.src}
           autoPlay
           muted
           playsInline
           onEnded={handleVideoEnd}
-          onError={() => advance()}
+          onError={advance}
           style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            opacity,
-            transition: `opacity ${CROSSFADE_DURATION}ms ease-in-out`,
-            position: "absolute",
-            top: 0,
-            left: 0,
+            ...layerStyle,
+            zIndex: 2,
+            animation: `ad-fade-in ${CROSSFADE_DURATION}ms ease-in-out both`,
           }}
         />
       )}

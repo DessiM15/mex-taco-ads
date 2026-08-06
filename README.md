@@ -70,7 +70,7 @@ Current TV 1 order:
 ```
 10-advertise-here.jpg
 20-mex-taco-catering.jpg
-30-launch-ad.jpg
+30-advertise-here-september.png
 40-smart-scale-ad.jpg
 50-steady-games-ad.jpg
 ```
@@ -130,7 +130,7 @@ public/
     tv1/          ← ads for TV 1
       10-advertise-here.jpg
       20-mex-taco-catering.jpg
-      30-launch-ad.jpg
+      30-advertise-here-september.png
       40-smart-scale-ad.jpg
       50-steady-games-ad.jpg
     tv2/          ← ads for TV 2

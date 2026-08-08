@@ -90,9 +90,9 @@ Current TV 1 order:
 ```
 10-andre-thomas-law.png
 20-mex-taco-catering.jpg
-30-advertise-here-september.png
+30-advertise-here.jpg
 40-smart-scale-ad.jpg
-50-steady-games-studio.mp4
+50-bloxify-ad.mp4
 ```
 
 **To put a new ad between two existing ones**, pick a number in the gap. To go between `20-` and `30-`, name it `25-new-advertiser.jpg`. Nothing else changes.
@@ -150,9 +150,9 @@ public/
     tv1/          ← ads for TV 1
       10-andre-thomas-law.png
       20-mex-taco-catering.jpg
-      30-advertise-here-september.png
+      30-advertise-here.jpg
       40-smart-scale-ad.jpg
-      50-steady-games-studio.mp4
+      50-bloxify-ad.mp4
     tv2/          ← ads for TV 2
       10-advertise-here.jpg
 ```

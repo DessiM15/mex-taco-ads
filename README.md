@@ -42,6 +42,26 @@ Fire Sticks are slow. A big image can still be downloading when its turn comes u
 
 ---
 
+## Video Ads
+
+Videos work like images, with two differences worth knowing:
+
+- **A video holds its slot for however long the file runs.** An image is always shown for exactly 10 seconds; a video is shown for its own length. A 30-second video will sit on screen for 30 seconds and throw the loop out of step.
+- **Cut video ads to 10.5 seconds, not 10.** An ad slot is 10.5 seconds: half a second fading in, then 10 seconds at full brightness. A 10.5-second video therefore gets the same 10 seconds of full-brightness screen time as every image. (Cut to a flat 10 seconds and it ends half a second early, which is barely visible but puts that ad slightly out of step with the rest.)
+- **Export at 30fps, not 60fps, and strip the audio.** Fire Sticks stutter decoding 1080p60 in a browser, and audio never plays anyway (the TVs are muted by design). 1920x1080, 30fps, H.264 MP4, around 1.5 MB.
+
+To cut the first 10.5 seconds off a longer clip and encode it correctly in one step — 315 frames at 30fps is exactly 10.5 seconds:
+
+```
+ffmpeg -i original.mp4 -vf fps=30 -frames:v 315 -an \
+  -c:v libx264 -profile:v high -pix_fmt yuv420p -preset slow -crf 22 \
+  -movflags +faststart 50-your-ad.mp4
+```
+
+`-an` strips the audio, and `-movflags +faststart` puts the index at the front of the file so playback can begin before the whole thing has downloaded.
+
+---
+
 ## How to Make an Ad "Premium" (Shows Twice Per Loop)
 
 Rename the file so it ends with `-premium` before the extension:
@@ -72,7 +92,7 @@ Current TV 1 order:
 20-mex-taco-catering.jpg
 30-advertise-here-september.png
 40-smart-scale-ad.jpg
-50-steady-games-ad.jpg
+50-steady-games-studio.mp4
 ```
 
 **To put a new ad between two existing ones**, pick a number in the gap. To go between `20-` and `30-`, name it `25-new-advertiser.jpg`. Nothing else changes.
@@ -132,7 +152,7 @@ public/
       20-mex-taco-catering.jpg
       30-advertise-here-september.png
       40-smart-scale-ad.jpg
-      50-steady-games-ad.jpg
+      50-steady-games-studio.mp4
     tv2/          ← ads for TV 2
       10-advertise-here.jpg
 ```

@@ -70,7 +70,7 @@ async function requestWakeLock() {
 export default function SignagePlayer({ tv }: { tv: string }) {
   const [ads, setAds] = useState<AdItem[]>([]);
   const [slot, setSlot] = useState<Slot>({ index: 0, prev: null, fadeAt: 0 });
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const preloadedVideos = useRef<Set<string>>(new Set());
 
   // Load ad manifest
   useEffect(() => {
@@ -142,26 +142,31 @@ export default function SignagePlayer({ tv }: { tv: string }) {
     return () => clearTimeout(timer);
   }, [slot.index, slot.prev]);
 
-  // Fetch the next image while the current one is on screen, so the crossfade
+  // Fetch the next ad while the current one is on screen, so the crossfade
   // never waits on the network.
   useEffect(() => {
     if (ads.length < 2) return;
     const nextAd = ads[(slot.index + 1) % ads.length];
-    if (nextAd.type !== "image") return;
-    const preload = new window.Image();
+    if (nextAd.type === "image") {
+      const preload = new window.Image();
+      preload.src = nextAd.src;
+      return;
+    }
+    // A cold video can still be buffering when its slot comes up on a Fire
+    // Stick, which shows as a frozen first frame. Warm it once per session —
+    // after that the browser cache serves it on every loop.
+    if (preloadedVideos.current.has(nextAd.src)) return;
+    preloadedVideos.current.add(nextAd.src);
+    const preload = document.createElement("video");
+    preload.preload = "auto";
+    preload.muted = true;
     preload.src = nextAd.src;
+    preload.load();
   }, [slot.index, ads]);
-
-  const handleVideoEnd = () => {
-    advance();
-  };
 
   if (ads.length === 0) {
     return <div style={{ width: "100vw", height: "100vh", background: "#000" }} />;
   }
-
-  const currentAd = ads[slot.index];
-  const prevAd = slot.prev !== null ? ads[slot.prev] : null;
 
   const layerStyle: React.CSSProperties = {
     width: "100%",
@@ -171,6 +176,16 @@ export default function SignagePlayer({ tv }: { tv: string }) {
     top: 0,
     left: 0,
   };
+
+  // Outgoing layer first, incoming second. Both come from one keyed list so
+  // that when an ad moves from incoming to outgoing React *moves* its DOM node
+  // rather than remounting it — a video keeps its last painted frame instead of
+  // reloading to a blank one under the crossfade.
+  const layers: { ad: AdItem; index: number; isCurrent: boolean }[] = [];
+  if (slot.prev !== null) {
+    layers.push({ ad: ads[slot.prev], index: slot.prev, isCurrent: false });
+  }
+  layers.push({ ad: ads[slot.index], index: slot.index, isCurrent: true });
 
   return (
     <div
@@ -187,44 +202,40 @@ export default function SignagePlayer({ tv }: { tv: string }) {
     >
       {/* Outgoing ad stays at full opacity underneath — the incoming one fades
           in over it, so the crossfade never dips through black. */}
-      {prevAd && prevAd.type === "image" && (
-        <img
-          key={`prev-${slot.prev}-${prevAd.src}`}
-          src={prevAd.src}
-          alt=""
-          style={{ ...layerStyle, zIndex: 1 }}
-        />
-      )}
-
-      {currentAd.type === "image" ? (
-        <img
-          key={`${slot.index}-${currentAd.src}`}
-          src={currentAd.src}
-          alt=""
-          onError={advance}
-          style={{
-            ...layerStyle,
-            zIndex: 2,
-            animation: `ad-fade-in ${CROSSFADE_DURATION}ms ease-in-out both`,
-          }}
-        />
-      ) : (
-        <video
-          key={`${slot.index}-${currentAd.src}`}
-          ref={videoRef}
-          src={currentAd.src}
-          autoPlay
-          muted
-          playsInline
-          onEnded={handleVideoEnd}
-          onError={advance}
-          style={{
-            ...layerStyle,
-            zIndex: 2,
-            animation: `ad-fade-in ${CROSSFADE_DURATION}ms ease-in-out both`,
-          }}
-        />
-      )}
+      {layers.map(({ ad, index, isCurrent }) => {
+        const style: React.CSSProperties = {
+          ...layerStyle,
+          zIndex: isCurrent ? 2 : 1,
+          animation: `ad-fade-in ${CROSSFADE_DURATION}ms ease-in-out both`,
+        };
+        return ad.type === "image" ? (
+          <img
+            key={`${index}-${ad.src}`}
+            src={ad.src}
+            alt=""
+            onError={isCurrent ? advance : undefined}
+            style={style}
+          />
+        ) : (
+          <video
+            key={`${index}-${ad.src}`}
+            src={ad.src}
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            // Some Fire Stick browsers ignore the autoplay attribute on a node
+            // that mounts mid-animation; nudging it keeps playback starting the
+            // instant the ad hits the screen. Muted, so it's never blocked.
+            onLoadedData={(e) => {
+              e.currentTarget.play().catch(() => {});
+            }}
+            onEnded={isCurrent ? advance : undefined}
+            onError={isCurrent ? advance : undefined}
+            style={style}
+          />
+        );
+      })}
     </div>
   );
 }

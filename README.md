@@ -91,7 +91,7 @@ Current TV 1 order:
 10-andre-thomas-law.png
 20-mex-taco-catering.jpg
 30-advertise-here.jpg
-40-smart-scale-ad.jpg
+40-smart-scale.jpg
 50-bloxify-ad.mp4
 ```
 
@@ -151,7 +151,7 @@ public/
       10-andre-thomas-law.png
       20-mex-taco-catering.jpg
       30-advertise-here.jpg
-      40-smart-scale-ad.jpg
+      40-smart-scale.jpg
       50-bloxify-ad.mp4
     tv2/          ← ads for TV 2
       10-advertise-here.jpg

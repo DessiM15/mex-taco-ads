@@ -88,7 +88,7 @@ Ads play in **alphabetical order by filename**, which is why every ad filename s
 Current TV 1 order:
 
 ```
-10-andre-thomas-law.png
+10-andre-thomas-law.jpg
 20-mex-taco-catering.jpg
 30-advertise-here.jpg
 40-smart-scale.jpg
@@ -148,7 +148,7 @@ Any other file types in the folder are ignored (won't break anything).
 public/
   ads/
     tv1/          ← ads for TV 1
-      10-andre-thomas-law.png
+      10-andre-thomas-law.jpg
       20-mex-taco-catering.jpg
       30-advertise-here.jpg
       40-smart-scale.jpg

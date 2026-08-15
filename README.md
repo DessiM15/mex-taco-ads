@@ -93,6 +93,7 @@ Current TV 1 order:
 30-advertise-here.jpg
 40-smart-scale.jpg
 50-bloxify-ad.mp4
+60-gin-jack.jpg
 ```
 
 **To put a new ad between two existing ones**, pick a number in the gap. To go between `20-` and `30-`, name it `25-new-advertiser.jpg`. Nothing else changes.
@@ -153,6 +154,7 @@ public/
       30-advertise-here.jpg
       40-smart-scale.jpg
       50-bloxify-ad.mp4
+      60-gin-jack.jpg
     tv2/          ← ads for TV 2
       10-advertise-here.jpg
 ```

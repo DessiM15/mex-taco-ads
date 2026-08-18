@@ -37,7 +37,7 @@ This app powers the TV ad displays at Mex Taco House. It shows a looping slidesh
 Fire Sticks are slow. A big image can still be downloading when its turn comes up, which shows as a black screen or a stutter — even though the timing code is correct.
 
 - **Export as JPG, not PNG.** A 1920x1080 PNG is often 2 MB; the same ad as a JPG is around 300 KB and looks identical on a TV.
-- **Aim for under 600 KB per ad.** All the current ads are 250–500 KB.
+- **Aim for under 600 KB per ad.** All the current ads are 190–460 KB.
 - In Canva, choose **JPG** on the download screen and leave quality at the default.
 
 ---
@@ -89,17 +89,18 @@ Current TV 1 order:
 
 ```
 10-andre-thomas-law.jpg
-20-mex-taco-catering.jpg
-30-advertise-here.jpg
-40-smart-scale.jpg
-50-bloxify-ad.mp4
+20-advertise-here-slots.jpg
+30-mex-taco-catering.jpg
+40-bloxify-ad.mp4
+50-smart-scale.jpg
 60-gin-jack.jpg
 70-jordyn.jpg
+80-advertise-here-reading.jpg
 ```
 
 **To put a new ad between two existing ones**, pick a number in the gap. To go between `20-` and `30-`, name it `25-new-advertiser.jpg`. Nothing else changes.
 
-**To add one at the end**, use the next ten — `70-`, then `80-`, and so on.
+**To add one at the end**, use the next ten — `90-`, then `100-`, and so on.
 
 If you ever run out of gaps, just renumber everything back to `10, 20, 30...` in the order you want.
 
@@ -151,12 +152,13 @@ public/
   ads/
     tv1/          ← ads for TV 1
       10-andre-thomas-law.jpg
-      20-mex-taco-catering.jpg
-      30-advertise-here.jpg
-      40-smart-scale.jpg
-      50-bloxify-ad.mp4
+      20-advertise-here-slots.jpg
+      30-mex-taco-catering.jpg
+      40-bloxify-ad.mp4
+      50-smart-scale.jpg
       60-gin-jack.jpg
       70-jordyn.jpg
+      80-advertise-here-reading.jpg
     tv2/          ← ads for TV 2
       10-advertise-here.jpg
 ```

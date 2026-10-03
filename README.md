@@ -97,11 +97,12 @@ Current TV 1 order:
 70-jordyn.jpg
 80-advertise-here-reading.jpg
 90-donna-washington.jpg
+95-house-rules.jpg
 ```
 
 **To put a new ad between two existing ones**, pick a number in the gap. To go between `20-` and `30-`, name it `25-new-advertiser.jpg`. Nothing else changes.
 
-**To add one at the end**, use the next ten — `90-`, then `100-`, and so on.
+**To add one at the end**, pick a number above the last one but still two digits — after `90-` use `95-`. Don't use `100-`: the order is alphabetical, so `100-` would play right after `10-`, not at the end. Once you pass `99-`, renumber everything (see below).
 
 If you ever run out of gaps, just renumber everything back to `10, 20, 30...` in the order you want.
 
@@ -161,6 +162,7 @@ public/
       70-jordyn.jpg
       80-advertise-here-reading.jpg
       90-donna-washington.jpg
+      95-house-rules.jpg
     tv2/          ← ads for TV 2
       10-advertise-here.jpg
 ```

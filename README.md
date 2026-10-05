@@ -91,7 +91,6 @@ Current TV 1 order:
 10-andre-thomas-law.jpg
 15-house-rules.jpg
 17-no-outside-food.jpg
-20-advertise-here-slots.jpg
 30-mex-taco-catering.jpg
 40-bloxify-ad.mp4
 50-smart-scale.jpg
@@ -158,7 +157,6 @@ public/
       10-andre-thomas-law.jpg
       15-house-rules.jpg
       17-no-outside-food.jpg
-      20-advertise-here-slots.jpg
       30-mex-taco-catering.jpg
       40-bloxify-ad.mp4
       50-smart-scale.jpg

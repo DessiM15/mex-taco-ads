@@ -90,10 +90,12 @@ Current TV 1 order:
 ```
 10-andre-thomas-law.jpg
 15-house-rules.jpg
+17-no-outside-food.jpg
 20-advertise-here-slots.jpg
 30-mex-taco-catering.jpg
 40-bloxify-ad.mp4
 50-smart-scale.jpg
+55-andre-thomas-law-hiring.jpg
 60-gin-jack.jpg
 70-jordyn.jpg
 80-advertise-here-reading.jpg
@@ -155,10 +157,12 @@ public/
     tv1/          ← ads for TV 1
       10-andre-thomas-law.jpg
       15-house-rules.jpg
+      17-no-outside-food.jpg
       20-advertise-here-slots.jpg
       30-mex-taco-catering.jpg
       40-bloxify-ad.mp4
       50-smart-scale.jpg
+      55-andre-thomas-law-hiring.jpg
       60-gin-jack.jpg
       70-jordyn.jpg
       80-advertise-here-reading.jpg

@@ -94,7 +94,6 @@ Current TV 1 order:
 30-mex-taco-catering.jpg
 40-bloxify-ad.mp4
 50-smart-scale.jpg
-55-andre-thomas-law-hiring.jpg
 60-gin-jack.jpg
 70-jordyn.jpg
 80-advertise-here-reading.jpg
@@ -160,7 +159,6 @@ public/
       30-mex-taco-catering.jpg
       40-bloxify-ad.mp4
       50-smart-scale.jpg
-      55-andre-thomas-law-hiring.jpg
       60-gin-jack.jpg
       70-jordyn.jpg
       80-advertise-here-reading.jpg

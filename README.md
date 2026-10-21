@@ -92,7 +92,7 @@ Current TV 1 order:
 15-house-rules.jpg
 17-no-outside-food.jpg
 30-mex-taco-catering.jpg
-40-bloxify-ad.mp4
+40-bloxify-ad.jpg
 50-smart-scale.jpg
 60-gin-jack.jpg
 70-jordyn.jpg
@@ -157,7 +157,7 @@ public/
       15-house-rules.jpg
       17-no-outside-food.jpg
       30-mex-taco-catering.jpg
-      40-bloxify-ad.mp4
+      40-bloxify-ad.jpg
       50-smart-scale.jpg
       60-gin-jack.jpg
       70-jordyn.jpg

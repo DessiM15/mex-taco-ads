@@ -91,6 +91,8 @@ Current TV 1 order:
 10-andre-thomas-law.jpg
 15-house-rules.jpg
 17-no-outside-food.jpg
+20-holiday-hours.jpg
+25-classic-toys-toy-drive.jpg
 30-mex-taco-catering.jpg
 40-bloxify-ad.jpg
 50-smart-scale.jpg
@@ -157,6 +159,8 @@ public/
       10-andre-thomas-law.jpg
       15-house-rules.jpg
       17-no-outside-food.jpg
+      20-holiday-hours.jpg
+      25-classic-toys-toy-drive.jpg
       30-mex-taco-catering.jpg
       40-bloxify-ad.jpg
       50-smart-scale.jpg

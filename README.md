@@ -100,6 +100,7 @@ Current TV 1 order:
 80-advertise-here-reading.jpg
 90-donna-washington.jpg
 95-tha-nail-artistry.jpg
+97-lone-star-college-cyfair.jpg
 ```
 
 **To put a new ad between two existing ones**, pick a number in the gap. To go between `20-` and `30-`, name it `25-new-advertiser.jpg`. Nothing else changes.
@@ -167,6 +168,7 @@ public/
       80-advertise-here-reading.jpg
       90-donna-washington.jpg
       95-tha-nail-artistry.jpg
+      97-lone-star-college-cyfair.jpg
     tv2/          ← ads for TV 2
       10-advertise-here.jpg
 ```

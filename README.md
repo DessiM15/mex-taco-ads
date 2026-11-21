@@ -1,113 +1,63 @@
 # Mex Taco House - Digital Signage
 
-This app powers the TV ad displays at Mex Taco House. It shows a looping slideshow of advertisement images and videos on two TVs.
+This app is the player on the TVs. It shows a looping slideshow of ads, and gets the list of what to play from the Smart Scale portal.
 
 ---
 
 ## How It Works
 
-- **TV 1** shows ads from the folder `public/ads/tv1/`
-- **TV 2** shows ads from the folder `public/ads/tv2/`
-- Each TV loops through its ads continuously — images show for **exactly 10 seconds** each (plus a half-second crossfade into the next ad), videos play their full length (muted)
-- When you add/remove files and push to GitHub, Vercel automatically rebuilds and the TVs pick up the change at 4 AM CST (or on next page load)
+- **The ads are managed in the portal**, at smartscaleagent.com/advertise/admin/screens. Adding, replacing, reordering, pausing and dating a slide all happen there. Nothing in this project needs editing to change what plays.
+- Each TV asks the portal for its list every two minutes, so a change shows up on the wall shortly after it is saved.
+- A slide with a last day stops by itself. The list carries each slide's last day, so it still comes down on time if the TV has lost its connection.
+- Images show for **exactly 10 seconds** each (plus a half-second crossfade into the next ad). Videos play their full length, muted.
+
+### If the portal can't be reached
+
+The TV never goes black over a dropped connection. In order, it plays:
+
+1. The list the portal just gave it.
+2. The last list it saved, if the portal isn't answering.
+3. The files in `public/ads/tv1/` in this project, if it has never had a list.
+
+So the files in `public/ads/` are now a **backup loop**, not the live one. Keep a few safe slides there (house rules, catering, "advertise here"). Don't put a paying client's ad in the backup: nothing takes it down when their term ends.
+
+### Which TV is which
+
+- `/tv1` is Mex Taco House, screen 1. `/tv2` is screen 2.
+- A TV at a new location opens `/play?venue=<location id>&screen=<number>`. The location id is the one in the portal's Locations page address.
 
 ---
 
-## How to Add a New Ad
+## Making an Ad
 
-1. **Design the ad in Canva** — use 1920 x 1080 pixels (landscape, HD)
-2. **Export it** as **JPG** for images (not PNG — see "Keep Files Small" below), or `.mp4`/`.webm` for video
-3. **Name the file** starting with a number, then lowercase words with dashes, like `60-joes-plumbing-ad.jpg`
-   - The number controls where it plays in the loop — see "Ad Display Order" below
-   - No spaces in the filename
-   - Keep it descriptive so you know what it is later
-4. **Drop the file** into the correct folder:
-   - `public/ads/tv1/` for TV 1
-   - `public/ads/tv2/` for TV 2
-   - You can put the same file in both folders if you want it on both screens
-5. **Commit and push to GitHub:**
-   - In GitHub Desktop or the terminal: add the file, commit with a message like "Add Joe's Plumbing ad", and push
-   - Vercel will automatically rebuild (takes about 1 minute)
-   - The TVs will show the new ad after their next 4 AM refresh, or you can manually refresh the browser on the Fire Stick
-
----
-
-## Keep Files Small
-
-Fire Sticks are slow. A big image can still be downloading when its turn comes up, which shows as a black screen or a stutter — even though the timing code is correct.
-
-- **Export as JPG, not PNG.** A 1920x1080 PNG is often 2 MB; the same ad as a JPG is around 300 KB and looks identical on a TV.
-- **Aim for under 600 KB per ad.** All the current ads are 190–460 KB.
-- In Canva, choose **JPG** on the download screen and leave quality at the default.
+1. **Design it in Canva** at 1920 x 1080 pixels (landscape, HD).
+2. **Export** as JPG or PNG for an image, or MP4 for video.
+3. **Upload it on the Screens page** in the portal. The portal resizes images and saves them light enough for a Fire Stick, and warns you if a video is too long or too heavy.
 
 ---
 
 ## Video Ads
 
-Videos work like images, with two differences worth knowing:
+- **A video holds its slot for however long the file runs.** An image is always shown for exactly 10 seconds; a 30-second video sits on screen for 30 seconds and throws the loop out of step.
+- **Cut video ads to 10.5 seconds, not 10.** A slot is 10.5 seconds: half a second fading in, then 10 at full brightness.
+- **Export at 30fps and strip the audio.** Fire Sticks stutter decoding 1080p60 in a browser, and the TVs are muted anyway. 1920x1080, 30fps, H.264 MP4, around 1.5 MB.
 
-- **A video holds its slot for however long the file runs.** An image is always shown for exactly 10 seconds; a video is shown for its own length. A 30-second video will sit on screen for 30 seconds and throw the loop out of step.
-- **Cut video ads to 10.5 seconds, not 10.** An ad slot is 10.5 seconds: half a second fading in, then 10 seconds at full brightness. A 10.5-second video therefore gets the same 10 seconds of full-brightness screen time as every image. (Cut to a flat 10 seconds and it ends half a second early, which is barely visible but puts that ad slightly out of step with the rest.)
-- **Export at 30fps, not 60fps, and strip the audio.** Fire Sticks stutter decoding 1080p60 in a browser, and audio never plays anyway (the TVs are muted by design). 1920x1080, 30fps, H.264 MP4, around 1.5 MB.
-
-To cut the first 10.5 seconds off a longer clip and encode it correctly in one step — 315 frames at 30fps is exactly 10.5 seconds:
+To cut the first 10.5 seconds off a longer clip and encode it correctly in one step:
 
 ```
 ffmpeg -i original.mp4 -vf fps=30 -frames:v 315 -an \
   -c:v libx264 -profile:v high -pix_fmt yuv420p -preset slow -crf 22 \
-  -movflags +faststart 50-your-ad.mp4
+  -movflags +faststart your-ad.mp4
 ```
-
-`-an` strips the audio, and `-movflags +faststart` puts the index at the front of the file so playback can begin before the whole thing has downloaded.
 
 ---
 
-## How to Make an Ad "Premium" (Shows Twice Per Loop)
+## Changing the Backup Loop
 
-Rename the file so it ends with `-premium` before the extension:
+Only needed when the backup slides themselves change.
 
-- Regular: `60-joes-plumbing-ad.jpg` (shows once per loop)
-- Premium: `60-joes-plumbing-ad-premium.jpg` (shows twice per loop, spread apart)
-
-That's it — just the filename controls it.
-
----
-
-## How to Remove an Advertiser
-
-1. Delete their file(s) from `public/ads/tv1/` and/or `public/ads/tv2/`
-2. Commit and push to GitHub
-3. The ad disappears after Vercel rebuilds
-
----
-
-## Ad Display Order
-
-Ads play in **alphabetical order by filename**, which is why every ad filename starts with a number. The numbers go up in **tens** — `10-`, `20-`, `30-` — so you can slide a new ad in between two existing ones without renaming anything else.
-
-Current TV 1 order:
-
-```
-10-andre-thomas-law.jpg
-15-house-rules.jpg
-17-no-outside-food.jpg
-20-holiday-hours.jpg
-30-mex-taco-catering.jpg
-40-bloxify-ad.jpg
-50-smart-scale.jpg
-60-gin-jack.jpg
-70-jordyn.jpg
-80-advertise-here-reading.jpg
-90-donna-washington.jpg
-95-tha-nail-artistry.jpg
-97-lone-star-college-cyfair.jpg
-```
-
-**To put a new ad between two existing ones**, pick a number in the gap. To go between `20-` and `30-`, name it `25-new-advertiser.jpg`. Nothing else changes.
-
-**To add one at the end**, pick a number above the last one but still two digits — after `90-` use `95-`. Don't use `100-`: the order is alphabetical, so `100-` would play right after `10-`, not at the end. Once you pass `99-`, renumber everything (see below).
-
-If you ever run out of gaps, just renumber everything back to `10, 20, 30...` in the order you want.
+1. Put files in `public/ads/tv1/`, named with a number first (`10-house-rules.jpg`). They play in filename order.
+2. Commit and push. Vercel rebuilds, and the TVs pick up the new backup at their 4 AM refresh.
 
 ---
 
@@ -122,7 +72,7 @@ Each Amazon Fire Stick needs to open one URL in full-screen:
 3. In Fully Kiosk: enable kiosk mode, disable the navigation bar, enable autostart on boot
 4. In Silk: enter the URL, tap the fullscreen icon, and set it as the startup page
 
-The page hides the cursor, prevents the screen from sleeping, and auto-refreshes at 4 AM CST every night to pick up any new ads.
+The page hides the cursor, prevents the screen from sleeping, and refreshes itself at 4 AM CST every night to pick up any update to the player. If the TV is offline at 4 AM it skips the refresh and keeps playing.
 
 ---
 
@@ -139,38 +89,12 @@ Any other file types in the folder are ignored (won't break anything).
 
 ## Technical Details (For Reference)
 
-- Built with Next.js (static export)
-- Hosted on Vercel (auto-deploys from GitHub)
-- No database, no login, no backend — just static files
+- Built with Next.js (static export), hosted on Vercel (auto-deploys from GitHub)
+- The playlist comes from `https://smartscaleagent.com/api/screens/<location>/<screen>`; each check-in also tells the portal the screen is alive
+- The last good list is kept in the browser's storage, and slide files are cached by the browser after their first play
+- A new list is swapped in between two ads, never in the middle of one
 - Videos play muted with a 30-second safety timeout (in case one freezes)
 - Broken images are automatically skipped
 - Screen wake lock keeps the TV from sleeping
-- Slide timing uses absolute deadlines rather than a chain of `setTimeout` calls, so a timer that fires late on slow hardware doesn't push the whole schedule out — the loop can't drift over a day of playback
+- Slide timing uses absolute deadlines, so a timer that fires late on slow hardware doesn't push the whole schedule out
 - The next image is preloaded while the current one is on screen
-
----
-
-## Folder Structure
-
-```
-public/
-  ads/
-    tv1/          ← ads for TV 1
-      10-andre-thomas-law.jpg
-      15-house-rules.jpg
-      17-no-outside-food.jpg
-      20-holiday-hours.jpg
-      30-mex-taco-catering.jpg
-      40-bloxify-ad.jpg
-      50-smart-scale.jpg
-      60-gin-jack.jpg
-      70-jordyn.jpg
-      80-advertise-here-reading.jpg
-      90-donna-washington.jpg
-      95-tha-nail-artistry.jpg
-      97-lone-star-college-cyfair.jpg
-    tv2/          ← ads for TV 2
-      10-advertise-here.jpg
-```
-
-`manifest.json` also appears in each folder — that's generated automatically on every build. Don't edit it by hand; your changes get overwritten.
